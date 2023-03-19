@@ -1,12 +1,14 @@
+use std::sync::{mpsc::sync_channel, Arc, Mutex};
+
 use arboard::Clipboard;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::use_router;
 
-use crate::spotify::{
+use crate::{spotify::{
     auth::SpotifyAuth,
     client_config::{ClientConfig, DEFAULT_CONFIG_PORT},
-};
+}, ui::screens::request_authorization_screen::{RequestAuthorizationScreen, RequestAuthorizationScreenProps}};
 
 pub fn SpotifyConfigScreen(cx: Scope) -> Element {
     let window = use_window(&cx);
@@ -14,6 +16,22 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
     let client_id = use_state(&cx, || "".to_string());
     let client_secret = use_state(&cx, || "".to_string());
     let port = use_state(&cx, || DEFAULT_CONFIG_PORT.to_string());
+    let spotify_auth = Arc::new(Mutex::new(SpotifyAuth::new()));
+
+    let (sender, receiver) = sync_channel(1);
+    tokio::spawn({
+        // to_owned![spotify_auth];
+        let auth = Arc::clone(&spotify_auth);
+        async move {
+            if let Ok(url) = receiver.recv() {
+                println!("channel url: {}", url);
+                if let Ok(auth) = auth.lock() {
+                    // auth.continue_oauth(url).await;
+
+                }
+            }
+        }
+    });
 
     use_effect(&cx, (), |_| {
         to_owned![client_id, client_secret];
@@ -87,7 +105,7 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
             }
             button {
                 class: "rounded-md bg-appGreen px-4 py-1.5 mt-2 text-appWhite",
-                onclick: |_| {
+                onclick: move |_| {
                     let client_config = ClientConfig {
                         client_id: client_id.to_string(),
                         client_secret: client_secret.to_string(),
@@ -105,19 +123,30 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
                         println!("Loaded config: {:?}", c);
                     }
                     cx.spawn({
-                        to_owned![router, window];
-                        let mut auth = SpotifyAuth::new();
+                        to_owned![router, window, sender];
 
+                        let auth = Arc::clone(&spotify_auth);
                         async move {
-                            match auth.oauth().await {
-                                Ok(url) => {
-                                    println!("OAuth pass: {}", url);
-                                    router.navigate_to("/menu")
-                                },
-                                Err(e) => {
-                                    println!("OAuth failed: {}", e);
-                                },
-                            };
+                            let auth = auth.lock();
+                            if let Ok(mut auth) = auth {
+                                match auth.oauth().await {
+                                    Ok(url) => {
+                                        // router.navigate_to("/menu")
+                                        let dom = VirtualDom::new_with_props(
+                                            RequestAuthorizationScreen,
+                                            RequestAuthorizationScreenProps {
+                                                url: url,
+                                                sender,
+                                            },
+                                        );
+                                        window.new_window(dom, Default::default());
+                                        drop(auth);
+                                    },
+                                    Err(e) => {
+                                        println!("OAuth failed: {}", e);
+                                    },
+                                };
+                            }
                         }
                     });
                 },

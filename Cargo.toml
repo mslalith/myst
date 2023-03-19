@@ -8,9 +8,12 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.69"
 arboard = "3.2.0"
-dioxus = "0.3.2"
-dioxus-desktop = "0.3.0"
-dioxus-router = "0.3.0"
+# dioxus = "0.3.2"
+# dioxus-desktop = "0.3.0"
+# dioxus-router = "0.3.0"
+dioxus = { git = "https://github.com/dioxuslabs/dioxus.git" }
+dioxus-desktop = { git = "https://github.com/dioxuslabs/dioxus.git" }
+dioxus-router = { git = "https://github.com/dioxuslabs/dioxus.git" }
 dirs = "4.0.0"
 open = "4.0.0"
 rspotify = "0.11.6"
