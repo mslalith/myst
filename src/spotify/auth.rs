@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use anyhow::{Ok, Result};
+use anyhow::{Ok, Result, anyhow};
 use rspotify::prelude::OAuthClient;
 use rspotify::{ClientCredsSpotify, Credentials, scopes, AuthCodeSpotify, OAuth};
 
@@ -36,13 +36,6 @@ impl SpotifyAuth {
         Ok(is_config_required)
     }
 
-    pub async fn authenticate() -> Result<SpotifyClient> {
-        let client_config = ClientConfig::load_config()?;
-        let spotify = SpotifyAuth::get_client_creds(&client_config)?;
-        spotify.request_token().await?;
-        Ok(SpotifyClient::new(spotify))
-    }
-
     pub async fn oauth(&mut self) -> Result<String> {
         let client_config = ClientConfig::load_config()?;
         let creds = Credentials {
@@ -66,15 +59,15 @@ impl SpotifyAuth {
         Ok(url)
     }
 
-    pub async fn continue_oauth(&self, redirect_url: String) -> Result<()> {
-        let spotify = &self.spotify.as_ref().unwrap();
+    pub async fn continue_oauth(&self, redirect_url: String) -> Result<SpotifyClient> {
+        let spotify = *&self.spotify.as_ref().unwrap();
         if let Some(code) = spotify.parse_response_code(&redirect_url) {
             spotify.request_token(&code).await?;
             let me = spotify.me().await?;
-            println!("me: {me:?}");
+            return Ok(SpotifyClient::new(spotify.clone(), me))
         }
 
-        Ok(())
+        Err(anyhow!("Unable to fetch token"))
     }
 
     fn get_client_creds(client_config: &ClientConfig) -> Result<ClientCredsSpotify> {

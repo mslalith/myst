@@ -1,4 +1,4 @@
-use std::sync::{mpsc::sync_channel, Arc, Mutex};
+use std::{sync::{Arc, Mutex, RwLock}, rc::Rc};
 
 use arboard::Clipboard;
 use dioxus::prelude::*;
@@ -17,21 +17,6 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
     let client_secret = use_state(&cx, || "".to_string());
     let port = use_state(&cx, || DEFAULT_CONFIG_PORT.to_string());
     let spotify_auth = Arc::new(Mutex::new(SpotifyAuth::new()));
-
-    let (sender, receiver) = sync_channel(1);
-    tokio::spawn({
-        // to_owned![spotify_auth];
-        let auth = Arc::clone(&spotify_auth);
-        async move {
-            if let Ok(url) = receiver.recv() {
-                println!("channel url: {}", url);
-                if let Ok(auth) = auth.lock() {
-                    // auth.continue_oauth(url).await;
-
-                }
-            }
-        }
-    });
 
     use_effect(&cx, (), |_| {
         to_owned![client_id, client_secret];
@@ -119,34 +104,37 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
                     };
                     let _ = client_config.save_config();
 
-                    if let Ok(c) = ClientConfig::load_config() {
-                        println!("Loaded config: {:?}", c);
-                    }
                     cx.spawn({
-                        to_owned![router, window, sender];
+                        to_owned![router, window];
 
                         let auth = Arc::clone(&spotify_auth);
+                        let on_complete_auth = Arc::clone(&spotify_auth);
                         async move {
-                            let auth = auth.lock();
-                            if let Ok(mut auth) = auth {
-                                match auth.oauth().await {
-                                    Ok(url) => {
-                                        // router.navigate_to("/menu")
-                                        let dom = VirtualDom::new_with_props(
-                                            RequestAuthorizationScreen,
-                                            RequestAuthorizationScreenProps {
-                                                url: url,
-                                                sender,
-                                            },
-                                        );
-                                        window.new_window(dom, Default::default());
-                                        drop(auth);
-                                    },
-                                    Err(e) => {
-                                        println!("OAuth failed: {}", e);
-                                    },
-                                };
-                            }
+                            let mut auth = auth.lock().unwrap();
+                            match auth.oauth().await {
+                                Ok(url) => {
+                                    let dom = VirtualDom::new_with_props(
+                                        RequestAuthorizationScreen,
+                                        RequestAuthorizationScreenProps {
+                                            url: url,
+                                            on_complete: Rc::new(RwLock::new(move |redirect_url| {
+                                                println!("callback url: {}", redirect_url);
+                                                to_owned![router, on_complete_auth];
+                                                async move {
+                                                    if let Ok(spotify_client) = on_complete_auth.lock().unwrap().continue_oauth(redirect_url).await {
+                                                        router.navigate_to("/menu")
+                                                    }
+                                                }
+                                            }))
+                                        },
+                                    );
+                                    window.new_window(dom, Default::default());
+                                    drop(auth);
+                                },
+                                Err(e) => {
+                                    println!("OAuth failed: {}", e);
+                                },
+                            };
                         }
                     });
                 },

@@ -1,4 +1,4 @@
-use std::sync::mpsc::SyncSender;
+use std::{sync::RwLock, rc::Rc, future::Future};
 
 use anyhow::Result;
 use dioxus::prelude::*;
@@ -7,26 +7,38 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::spotify::client_config::ClientConfig;
 
-#[derive(Clone)]
-pub struct RequestAuthorizationScreenProps {
+pub struct RequestAuthorizationScreenProps<F, O>
+where
+    F : FnMut(String) -> O + 'static,
+    O : Future<Output = ()>
+{
     pub url: String,
-    pub sender: SyncSender<String>,
+    pub on_complete: Rc<RwLock<F>>
 }
 
-pub fn RequestAuthorizationScreen(cx: Scope<RequestAuthorizationScreenProps>) -> Element {
+pub fn RequestAuthorizationScreen<F, O>(cx: Scope<RequestAuthorizationScreenProps<F, O>>) -> Element
+where
+    F : FnMut(String) -> O + 'static,
+    O : Future<Output = ()>
+{
     let window = use_window(cx);
-    let sender = &cx.props.sender;
+    let on_complete = &cx.props.on_complete;
 
     window.webview.load_url(cx.props.url.as_str());
 
     cx.spawn({
-        to_owned![window, sender];
+        to_owned![window, on_complete];
+
         async move {
             let res = await_action().await;
-            dbg!(&res);
             match res {
                 Ok(redirect_url) => {
-                    let _ = sender.send(redirect_url);
+                    {
+                        let mut callback = on_complete.write().unwrap();
+                        let future = (callback)(redirect_url);
+                        drop(callback);
+                        future
+                    }.await;
                     window.close();
                 },
                 Err(_) => todo!(),
@@ -40,7 +52,10 @@ pub fn RequestAuthorizationScreen(cx: Scope<RequestAuthorizationScreenProps>) ->
 }
 
 async fn await_action() -> Result<String> {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8888").await?;
+    let port = ClientConfig::load_config()?.port;
+    let addr = format!("127.0.0.1:{}", port);
+
+    let listener = tokio::net::TcpListener::bind(addr).await?;
     let (mut stream, _) = listener.accept().await?;
 
     let mut buf = [0; 4096];
@@ -52,7 +67,7 @@ async fn await_action() -> Result<String> {
     let mut redirect_url = "".to_string();
     if data.contains("/callback?code") {
         stream.shutdown().await?;
-        let domain = ClientConfig::get_local_server_addr(8888);
+        let domain = ClientConfig::get_local_server_addr(port);
         redirect_url = format!("{}{}", &domain, data);
     }
     Ok(redirect_url)
