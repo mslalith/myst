@@ -126,7 +126,7 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
                                                 async move {
                                                     if let Ok(spotify_client) = on_complete_auth.lock().unwrap().continue_oauth(redirect_url).await {
                                                         app.move_app_state_to(AppState::Home(HomeState::new(spotify_client)));
-                                                        router.navigate_to("/menu")
+                                                        router.navigate_to("/home")
                                                     }
                                                 }
                                             }))

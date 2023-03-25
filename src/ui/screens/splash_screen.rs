@@ -42,7 +42,7 @@ pub fn SplashScreen(cx: Scope) -> Element {
         if let AppState::Splash(splash_state) = app_state {
             if let Ok(is_authorized) = splash_state.is_authorized().await {
                 if is_authorized {
-                    router.navigate_to("menu");
+                    router.navigate_to("home");
                     return;
                 }
             }

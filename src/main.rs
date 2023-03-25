@@ -12,7 +12,7 @@ use dioxus_desktop::{tao::dpi::Size, Config, PhysicalSize, WindowBuilder};
 use dioxus_router::{Route, Router};
 
 use crate::state::app::App;
-use crate::ui::screens::menu_screen::MenuScreen;
+use crate::ui::screens::home_screen::HomeScreen;
 use crate::ui::screens::splash_screen::SplashScreen;
 use crate::ui::screens::spotify_config_screen::SpotifyConfigScreen;
 
@@ -53,7 +53,7 @@ fn App(cx: Scope) -> Element {
             Router {
                 Route { to: "/", SplashScreen {} }
                 Route { to: "/spotify-config", SpotifyConfigScreen {} }
-                Route { to: "/menu", MenuScreen {} }
+                Route { to: "/home", HomeScreen {} }
             }
         }
     }
