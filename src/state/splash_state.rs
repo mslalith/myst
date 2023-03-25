@@ -1,6 +1,6 @@
 use anyhow::{Result, Ok};
 
-use crate::spotify::auth::SpotifyAuth;
+use crate::spotify::spotify_auth::SpotifyAuth;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct SplashState;

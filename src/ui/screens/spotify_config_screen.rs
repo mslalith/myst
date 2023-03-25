@@ -5,10 +5,11 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::use_router;
 
-use crate::{spotify::{
-    auth::SpotifyAuth,
+use crate::ui::screens::request_authorization_screen::{RequestAuthorizationScreen, RequestAuthorizationScreenProps};
+use crate::spotify::{
+    spotify_auth::SpotifyAuth,
     client_config::{ClientConfig, DEFAULT_CONFIG_PORT},
-}, ui::screens::request_authorization_screen::{RequestAuthorizationScreen, RequestAuthorizationScreenProps}};
+};
 
 pub fn SpotifyConfigScreen(cx: Scope) -> Element {
     let window = use_window(&cx);
