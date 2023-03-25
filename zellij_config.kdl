@@ -1,0 +1,14 @@
+layout {
+    pane split_direction="vertical" {
+        pane
+    }
+    pane size=1 borderless=true {
+        plugin location="zellij:compact-bar"
+    }
+    floating_panes {
+        pane command="cargo" {
+            args "run"
+            start_suspended true
+        }
+    }
+}
