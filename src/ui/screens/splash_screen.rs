@@ -5,19 +5,23 @@ use dioxus_free_icons::Icon;
 use dioxus_free_icons::icons::fi_icons::FiMusicNote;
 use dioxus_router::{use_router, RouterService};
 
-use crate::spotify::auth::SpotifyAuth;
+use crate::hooks::use_app::use_app;
+use crate::state::app_state::AppState;
 use crate::utils::timer_utils::{timeout_ms, delay_ms};
 
 pub fn SplashScreen(cx: Scope) -> Element {
+    let app = use_app(cx);
     let loading_text = use_state(&cx, || "".to_string());
     let router = use_router(&cx);
 
+    let app_state = &app.read().current_state;
+
     use_effect(&cx, (), |_| {
-        to_owned![loading_text, router];
+        to_owned![loading_text, router, app_state];
 
         async move {
             let _ = timeout_ms(3000, animate_loading_text(&loading_text)).await;
-            navigate_to_next_screen(&router).await;
+            navigate_to_next_screen(&app_state, &router).await;
         }
     });
 
@@ -34,12 +38,17 @@ pub fn SplashScreen(cx: Scope) -> Element {
         }
     }
 
-    async fn navigate_to_next_screen(router: &Rc<RouterService>) {
-        if SpotifyAuth::is_configuration_required().await.unwrap_or(true) {
-            router.navigate_to("spotify-config");
-        } else {
-            router.navigate_to("menu");
+    async fn navigate_to_next_screen(app_state: &AppState, router: &Rc<RouterService>) {
+        if let AppState::Splash(splash_state) = app_state {
+            if let Ok(is_authorized) = splash_state.is_authorized().await {
+                if is_authorized {
+                    router.navigate_to("menu");
+                    return;
+                }
+            }
         }
+
+        router.navigate_to("spotify-config");
     }
 
     render! {

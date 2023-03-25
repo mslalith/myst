@@ -2,7 +2,7 @@ use super::{
     home_state::HomeState, splash_state::SplashState, spotify_auth_state::SpotifyAuthState,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AppState {
     Splash(SplashState),
     SpotifyAuth(SpotifyAuthState),

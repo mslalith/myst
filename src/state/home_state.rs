@@ -1,6 +1,6 @@
 use crate::spotify::spotify_client::SpotifyClient;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HomeState {
     spotify_client: SpotifyClient,
 }

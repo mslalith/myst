@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+mod hooks;
 mod spotify;
 mod state;
 mod ui;
@@ -10,6 +11,7 @@ use dioxus_desktop::tao::menu::{MenuBar, MenuItem};
 use dioxus_desktop::{tao::dpi::Size, Config, PhysicalSize, WindowBuilder};
 use dioxus_router::{Route, Router};
 
+use crate::state::app::App;
 use crate::ui::screens::menu_screen::MenuScreen;
 use crate::ui::screens::splash_screen::SplashScreen;
 use crate::ui::screens::spotify_config_screen::SpotifyConfigScreen;
@@ -42,7 +44,9 @@ fn get_launch_config() -> Config {
 }
 
 fn App(cx: Scope) -> Element {
-    cx.render(rsx! {
+    use_shared_state_provider(cx, || App::new());
+
+    render! {
         style { STYLES }
         div {
             class: "w-screen h-screen bg-appBlack",
@@ -52,5 +56,5 @@ fn App(cx: Scope) -> Element {
                 Route { to: "/menu", MenuScreen {} }
             }
         }
-    })
+    }
 }

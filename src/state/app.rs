@@ -1,7 +1,7 @@
 use super::{app_state::AppState, splash_state::SplashState};
 
 pub struct App {
-    current_state: AppState,
+    pub current_state: AppState,
 }
 
 impl App {
