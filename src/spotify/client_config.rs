@@ -28,27 +28,27 @@ impl ClientConfig {
 
     pub fn get_config_paths() -> Result<ConfigPaths> {
         Ok(ConfigPaths {
-            config_file_path: ClientConfig::get_client_config_file()?,
-            token_cache_path: ClientConfig::get_token_cache_file()?,
+            config_file_path: Self::get_client_config_file()?,
+            token_cache_path: Self::get_token_cache_file()?,
         })
     }
 
     pub fn load_config() -> Result<ClientConfig> {
-        let config_file = ClientConfig::get_client_config_file()?;
+        let config_file = Self::get_client_config_file()?;
         let contents = fs::read_to_string(&config_file)?;
         let config: ClientConfig = serde_yaml::from_str(&contents)?;
         Ok(config)
     }
 
     pub fn save_config(&self) -> Result<()> {
-        let config_file = ClientConfig::get_client_config_file()?;
+        let config_file = Self::get_client_config_file()?;
         let contents = serde_yaml::to_string(&self)?;
         fs::write(config_file, contents)?;
         Ok(())
     }
 
     pub fn get_redirect_uri(port: u16) -> String {
-        format!("{}/callback", ClientConfig::get_local_server_addr(port))
+        format!("{}/callback", Self::get_local_server_addr(port))
     }
 
     pub fn get_local_server_addr(port: u16) -> String {
@@ -69,12 +69,12 @@ impl ClientConfig {
     }
 
     fn get_client_config_file() -> Result<PathBuf> {
-        let config_dir = ClientConfig::get_config_dir()?;
+        let config_dir = Self::get_config_dir()?;
         Ok(config_dir.join("client_config.yml"))
     }
 
     fn get_token_cache_file() -> Result<PathBuf> {
-        let config_dir = ClientConfig::get_config_dir()?;
+        let config_dir = Self::get_config_dir()?;
         Ok(config_dir.join(".spotify_token_cache.json"))
     }
 }

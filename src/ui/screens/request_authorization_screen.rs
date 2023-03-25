@@ -30,8 +30,7 @@ where
         to_owned![window, on_complete];
 
         async move {
-            let res = await_action().await;
-            match res {
+            match await_action().await {
                 Ok(redirect_url) => {
                     {
                         let mut callback = on_complete.write().unwrap();
@@ -41,14 +40,14 @@ where
                     }.await;
                     window.close();
                 },
-                Err(_) => todo!(),
+                Err(e) => println!("Unable to get redirect_url: {}", e),
             }
         }
     });
 
-    cx.render(rsx! {
+    render! {
         div {}
-    })
+    }
 }
 
 async fn await_action() -> Result<String> {

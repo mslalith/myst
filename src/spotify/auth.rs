@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use anyhow::{Ok, Result, anyhow};
-use rspotify::prelude::OAuthClient;
-use rspotify::{ClientCredsSpotify, Credentials, scopes, AuthCodeSpotify, OAuth};
+use rspotify::prelude::{OAuthClient, BaseClient};
+use rspotify::{Credentials, scopes, AuthCodeSpotify, OAuth};
 
 use super::client_config::ClientConfig;
 use super::spotify_client::SpotifyClient;
@@ -19,17 +19,16 @@ impl SpotifyAuth {
     }
 
     pub async fn is_configuration_required() -> Result<bool> {
-        let client_config = ClientConfig::load_config()?;
-        let spotify = SpotifyAuth::get_client_creds(&client_config)?;
-        let is_config_required = match spotify.read_token_cache().await? {
+        let spotify = Self::get_client_creds()?;
+        let is_config_required = match spotify.read_token_cache(false).await? {
             Some(token) => {
                 if token.is_expired() {
-                    spotify.request_token().await?;
+                    let _ = spotify.refresh_token().await;
                 }
                 false
             },
             None => {
-                spotify.request_token().await?;
+                spotify.refresh_token().await?;
                 false
             },
         };
@@ -37,22 +36,7 @@ impl SpotifyAuth {
     }
 
     pub async fn oauth(&mut self) -> Result<String> {
-        let client_config = ClientConfig::load_config()?;
-        let creds = Credentials {
-            id: client_config.client_id.clone(),
-            secret: Some(client_config.client_secret.clone()),
-        };
-
-        let mut oauth = OAuth::default();
-        oauth.scopes = SpotifyAuth::get_scopes();
-        oauth.redirect_uri = ClientConfig::get_redirect_uri(client_config.port);
-
-        let mut config = rspotify::Config::default();
-        config.cache_path = ClientConfig::get_config_paths()?.token_cache_path;
-        config.token_cached = true;
-        config.token_refreshing = true;
-
-        let spotify = AuthCodeSpotify::with_config(creds, oauth, config);
+        let spotify = Self::get_client_creds()?;
         let url = spotify.get_authorize_url(true)?;
 
         self.spotify = Some(spotify);
@@ -70,18 +54,23 @@ impl SpotifyAuth {
         Err(anyhow!("Unable to fetch token"))
     }
 
-    fn get_client_creds(client_config: &ClientConfig) -> Result<ClientCredsSpotify> {
+    fn get_client_creds() -> Result<AuthCodeSpotify> {
+        let client_config = ClientConfig::load_config()?;
         let creds = Credentials {
             id: client_config.client_id.clone(),
             secret: Some(client_config.client_secret.clone()),
         };
+
+        let mut oauth = OAuth::default();
+        oauth.scopes = Self::get_scopes();
+        oauth.redirect_uri = ClientConfig::get_redirect_uri(client_config.port);
 
         let mut config = rspotify::Config::default();
         config.cache_path = ClientConfig::get_config_paths()?.token_cache_path;
         config.token_cached = true;
         config.token_refreshing = true;
 
-        Ok(ClientCredsSpotify::with_config(creds, config))
+        Ok(AuthCodeSpotify::with_config(creds, oauth, config))
     }
 
     fn get_scopes() -> HashSet<String> {

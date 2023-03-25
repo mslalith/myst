@@ -27,7 +27,7 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
         }
     });
 
-    cx.render(rsx! {
+    render! {
         div { class: "w-screen h-screen flex flex-col justify-center items-center",
           div { class: "flex flex-col gap-4 px-12",
             p {
@@ -107,11 +107,11 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
                     cx.spawn({
                         to_owned![router, window];
 
-                        let auth = Arc::clone(&spotify_auth);
+                        let initial_auth = Arc::clone(&spotify_auth);
                         let on_complete_auth = Arc::clone(&spotify_auth);
                         async move {
-                            let mut auth = auth.lock().unwrap();
-                            match auth.oauth().await {
+                            let mut initial_auth = initial_auth.lock().unwrap();
+                            match initial_auth.oauth().await {
                                 Ok(url) => {
                                     let dom = VirtualDom::new_with_props(
                                         RequestAuthorizationScreen,
@@ -129,7 +129,7 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
                                         },
                                     );
                                     window.new_window(dom, Default::default());
-                                    drop(auth);
+                                    drop(initial_auth);
                                 },
                                 Err(e) => {
                                     println!("OAuth failed: {}", e);
@@ -142,7 +142,7 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
             }
           }
         }
-    })
+    }
 }
 
 const COPY_SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">

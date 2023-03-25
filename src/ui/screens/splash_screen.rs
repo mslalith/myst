@@ -51,9 +51,9 @@ pub fn SplashScreen(cx: Scope) -> Element {
                     div {
                         class: "w-8/12 flex flex-row gap-5 items-center",
                         Icon {
+                            class: "text-appGreen",
                             width: 120,
                             height: 120,
-                            fill: "#1DB954",
                             icon: FiMusicNote,
                         }
                         p {
