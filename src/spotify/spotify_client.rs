@@ -1,5 +1,7 @@
-use rspotify::{model::PrivateUser, prelude::BaseClient, AuthCodeSpotify};
+use rspotify::model::PrivateUser;
+use rspotify::{prelude::BaseClient, AuthCodeSpotify};
 
+#[derive(Debug)]
 pub struct SpotifyClient {
     spotify: AuthCodeSpotify,
     me: PrivateUser,
