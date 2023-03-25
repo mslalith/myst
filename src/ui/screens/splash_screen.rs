@@ -10,11 +10,11 @@ use crate::state::app_state::AppState;
 use crate::utils::timer_utils::{timeout_ms, delay_ms};
 
 pub fn SplashScreen(cx: Scope) -> Element {
-    let app = use_app(cx);
     let loading_text = use_state(&cx, || "".to_string());
     let router = use_router(&cx);
 
-    let app_state = &app.read().current_state;
+    let app_shared = use_app(cx);
+    let app_state = &app_shared.read().current_state;
 
     use_effect(&cx, (), |_| {
         to_owned![loading_text, router, app_state];

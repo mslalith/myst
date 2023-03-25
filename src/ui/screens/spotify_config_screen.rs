@@ -5,6 +5,8 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::use_router;
 
+use crate::state::{app_state::AppState, home_state::HomeState};
+use crate::hooks::use_app::use_app;
 use crate::ui::screens::request_authorization_screen::{RequestAuthorizationScreen, RequestAuthorizationScreenProps};
 use crate::spotify::{
     spotify_auth::SpotifyAuth,
@@ -19,6 +21,7 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
     let port = use_state(&cx, || DEFAULT_CONFIG_PORT.to_string());
     let spotify_auth = Arc::new(Mutex::new(SpotifyAuth::new()));
 
+    let app = use_app(cx).read().clone();
     use_effect(&cx, (), |_| {
         to_owned![client_id, client_secret];
         async move {
@@ -106,7 +109,7 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
                     let _ = client_config.save_config();
 
                     cx.spawn({
-                        to_owned![router, window];
+                        to_owned![router, window, app];
 
                         let initial_auth = Arc::clone(&spotify_auth);
                         let on_complete_auth = Arc::clone(&spotify_auth);
@@ -119,10 +122,10 @@ pub fn SpotifyConfigScreen(cx: Scope) -> Element {
                                         RequestAuthorizationScreenProps {
                                             url: url,
                                             on_complete: Rc::new(RwLock::new(move |redirect_url| {
-                                                println!("callback url: {}", redirect_url);
-                                                to_owned![router, on_complete_auth];
+                                                to_owned![router, on_complete_auth, app];
                                                 async move {
                                                     if let Ok(spotify_client) = on_complete_auth.lock().unwrap().continue_oauth(redirect_url).await {
+                                                        app.move_app_state_to(AppState::Home(HomeState::new(spotify_client)));
                                                         router.navigate_to("/menu")
                                                     }
                                                 }

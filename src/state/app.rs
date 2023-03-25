@@ -1,5 +1,6 @@
 use super::{app_state::AppState, splash_state::SplashState};
 
+#[derive(Debug, Clone)]
 pub struct App {
     pub current_state: AppState,
 }
@@ -7,7 +8,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         App {
-            current_state: AppState::Splash(SplashState),
+            current_state: AppState::Splash(SplashState::new()),
         }
     }
 
@@ -26,7 +27,7 @@ mod tests {
     #[test]
     fn create_new_app() {
         let app = App::new();
-        assert_eq!(app.current_state, AppState::Splash(SplashState));
+        assert_eq!(app.current_state, AppState::Splash(SplashState::new()));
     }
 
     #[test]

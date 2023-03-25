@@ -6,5 +6,9 @@ pub struct HomeState {
 }
 
 impl HomeState {
+    pub fn new(spotify_client: SpotifyClient) -> Self {
+        HomeState { spotify_client }
+    }
+
     pub fn get_playlists() {}
 }
