@@ -1,6 +1,8 @@
 use std::rc::Rc;
 
 use dioxus::prelude::*;
+use dioxus_free_icons::Icon;
+use dioxus_free_icons::icons::fi_icons::FiMusicNote;
 use dioxus_router::{use_router, RouterService};
 
 use crate::spotify::auth::SpotifyAuth;
@@ -14,7 +16,7 @@ pub fn SplashScreen(cx: Scope) -> Element {
         to_owned![loading_text, router];
 
         async move {
-            let _ = timeout_ms(1000, animate_loading_text(&loading_text)).await;
+            let _ = timeout_ms(3000, animate_loading_text(&loading_text)).await;
             navigate_to_next_screen(&router).await;
         }
     });
@@ -40,14 +42,28 @@ pub fn SplashScreen(cx: Scope) -> Element {
         }
     }
 
-    cx.render(rsx! {
+    render! {
         div {
             class: "flex flex-col h-screen justify-center items-center",
             div { class: "flex flex-col gap-4 h-5/6 items-center",
                 div {
-                    class: "w-8/12 flex flex-grow items-center",
-                    img {
-                        src: "https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png"
+                    class: "flex flex-col flex-grow justify-center items-center",
+                    div {
+                        class: "w-8/12 flex flex-row gap-5 items-center",
+                        Icon {
+                            width: 120,
+                            height: 120,
+                            fill: "#1DB954",
+                            icon: FiMusicNote,
+                        }
+                        p {
+                            class: "text-appGreen text-[36px]",
+                            "myst"
+                        }
+                    }
+                    p {
+                        class: "text-appWhite",
+                        "A lightweight Spotify client"
                     }
                 }
                 p {
@@ -56,5 +72,5 @@ pub fn SplashScreen(cx: Scope) -> Element {
                 }
             }
         }
-    })
+    }
 }
