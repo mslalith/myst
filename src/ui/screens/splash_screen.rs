@@ -61,14 +61,15 @@ pub fn SplashScreen(cx: Scope) -> Element {
                     div {
                         class: "w-8/12 flex flex-row gap-5 items-center",
                         Icon {
-                            class: "text-appGreen",
+                            class: "text-primary",
                             width: 120,
                             height: 120,
                             icon: FiMusicNote,
                         }
-                        p {
-                            class: "text-appGreen text-[36px]",
-                            "myst"
+                        Text {
+                            class: "text-[36px]",
+                            color_class: "text-primary",
+                            value: "myst".to_string(),
                         }
                     }
                     Text { value: "A lightweight Spotify client".to_string() }

@@ -53,7 +53,7 @@ fn App(cx: Scope) -> Element {
     render! {
         style { STYLES }
         div {
-            class: "w-screen h-screen bg-appBlack",
+            class: "w-screen h-screen",
             Router {
                 Route { to: "/", SplashScreen {} }
                 Route { to: "/spotify-config", SpotifyConfigScreen {} }
