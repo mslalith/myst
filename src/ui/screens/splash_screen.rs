@@ -1,13 +1,14 @@
 use std::rc::Rc;
 
 use dioxus::prelude::*;
-use dioxus_free_icons::Icon;
 use dioxus_free_icons::icons::fi_icons::FiMusicNote;
+use dioxus_free_icons::Icon;
 use dioxus_router::{use_router, RouterService};
 
 use crate::hooks::use_app::use_app;
 use crate::state::app_state::AppState;
-use crate::utils::timer_utils::{timeout_ms, delay_ms};
+use crate::ui::components::text::Text;
+use crate::utils::timer_utils::{delay_ms, timeout_ms};
 
 pub fn SplashScreen(cx: Scope) -> Element {
     let loading_text = use_state(&cx, || "".to_string());
@@ -70,15 +71,9 @@ pub fn SplashScreen(cx: Scope) -> Element {
                             "myst"
                         }
                     }
-                    p {
-                        class: "text-appWhite",
-                        "A lightweight Spotify client"
-                    }
+                    Text { value: "A lightweight Spotify client".to_string() }
                 }
-                p {
-                    class: "text-appWhite",
-                    "{loading_text}"
-                }
+                Text { value: loading_text.to_string() }
             }
         }
     }

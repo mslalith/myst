@@ -8,6 +8,7 @@ mod utils;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::menu::{MenuBar, MenuItem};
 
+use dioxus_desktop::use_eval;
 use dioxus_desktop::{tao::dpi::Size, Config, PhysicalSize, WindowBuilder};
 use dioxus_router::{Route, Router};
 
@@ -45,6 +46,9 @@ fn get_launch_config() -> Config {
 
 fn App(cx: Scope) -> Element {
     use_shared_state_provider(cx, || App::new());
+
+    let eval = use_eval(cx);
+    eval("document.querySelector('html').setAttribute('data-theme', 'forest');".to_string());
 
     render! {
         style { STYLES }

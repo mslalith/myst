@@ -7,7 +7,11 @@ module.exports = {
       appGreen: "#1DB954",
       appWhite: "#FFFFFF",
       appBlack: "#191414",
+      white: "#FFFFFF",
     },
   },
-  plugins: [],
+  daisyui: {
+    themes: ["forest"],
+  },
+  plugins: [require("daisyui")],
 };
